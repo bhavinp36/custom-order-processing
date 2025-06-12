@@ -6,6 +6,7 @@
         <column name="order_id" xsi:type="int" unsigned="true" nullable="false" comment="Order ID"/>
         <column name="old_status" xsi:type="varchar" length="32" nullable="false" comment="Old Status"/>
         <column name="new_status" xsi:type="varchar" length="32" nullable="false" comment="New Status"/>
+        <column xsi:type="smallint" name="is_enabled" nullable="false" default="1" comment="Is Enabled"/>
         <column name="created_at" xsi:type="timestamp" on_update="false"
             nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
         <constraint xsi:type="primary" referenceId="PRIMARY">

@@ -12,9 +12,14 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Model\Order\Email\Sender\ShipmentSender;
 use Psr\Log\LoggerInterface;
+use Magento\Framework\App\CacheInterface;
+use Magento\Framework\App\Cache\Tag\Resolver;
 
 class OrderStatusObserver implements ObserverInterface
 {
+    protected const CACHE_TAG = 'vendor_order_status_log';
+    protected const CACHE_KEY_PREFIX = 'status_log_order_';
+
     /**
      * @var StatusLogFactory
      */
@@ -46,6 +51,11 @@ class OrderStatusObserver implements ObserverInterface
     protected $logger;
 
     /**
+     * @var CacheInterface
+     */
+    protected $cache;
+
+    /**
      * Constructor for OrderStatusObserver.
      *
      * Initializes dependencies for logging and email notifications.
@@ -56,6 +66,7 @@ class OrderStatusObserver implements ObserverInterface
      * @param DateTime              $dateTime
      * @param ShipmentSender        $shipmentSender
      * @param LoggerInterface       $logger
+     * @param CacheInterface        $cache
      */
     public function __construct(
         StatusLogFactory $logFactory,
@@ -63,7 +74,8 @@ class OrderStatusObserver implements ObserverInterface
         StoreManagerInterface $storeManager,
         DateTime $dateTime,
         ShipmentSender $shipmentSender,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        CacheInterface $cache
     ) {
         $this->logFactory = $logFactory;
         $this->transportBuilder = $transportBuilder;
@@ -71,6 +83,7 @@ class OrderStatusObserver implements ObserverInterface
         $this->dateTime = $dateTime;
         $this->shipmentSender = $shipmentSender;
         $this->logger = $logger;
+        $this->cache = $cache;
     }
 
     /**
@@ -83,12 +96,15 @@ class OrderStatusObserver implements ObserverInterface
      */
     public function execute(Observer $observer): void
     {
-        $order = $observer->getEvent()->getOrder();
+        $order = $observer->getEvent()->getData('order');
         $origStatus = $order->getOrigData('status');
         $newStatus = $order->getStatus();
 
+        $cacheKey = self::CACHE_KEY_PREFIX . $order->getId();
+
         if ($origStatus !== $newStatus) {
             $log = $this->logFactory->create();
+
             $log->setData(
                 [
                 'order_id' => $order->getId(),
@@ -98,6 +114,12 @@ class OrderStatusObserver implements ObserverInterface
                 ]
             );
             $log->save();
+
+            // Invalidate cache
+            $this->cache->remove($cacheKey);
+
+            // Store updated status in cache (optional)
+            $this->cache->save($newStatus, $cacheKey, [self::CACHE_TAG], 3600);
 
             // Send shipment email if order is marked complete or shipped
             if ($newStatus === Order::STATE_COMPLETE || $newStatus === 'shipped') {

@@ -1,0 +1,15 @@
+{
+    "vendor_customorder_status_log": {
+        "column": {
+            "entity_id": true,
+            "order_id": true,
+            "old_status": true,
+            "new_status": true,
+            "is_enabled": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}

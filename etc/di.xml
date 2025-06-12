@@ -3,4 +3,20 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">    
     <preference for="Vendor\CustomOrderProcessing\Api\OrderStatusUpdateInterface"
                 type="Vendor\CustomOrderProcessing\Model\OrderStatusUpdate" />
+    <virtualType name="Vendor\CustomOrderProcessing\Model\ResourceModel\StatusLog\Grid\Collection"
+        type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">vendor_customorder_status_log</argument>
+            <argument name="resourceModel"
+                xsi:type="string">Vendor\CustomOrderProcessing\Model\ResourceModel\StatusLog</argument>
+        </arguments>
+    </virtualType>
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="customorderprocessing_statuslog_listing_data_source"
+                    xsi:type="string">Vendor\CustomOrderProcessing\Model\ResourceModel\StatusLog\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
